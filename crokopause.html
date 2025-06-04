@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Spotify Track Pauser</title>
+</head>
+<body>
+	<h1>Pausing soon...</h1>
+	<script>
+		const accessToken = 'b3ee89ee428640cda6e8ed62e503a0a8';
+
+		async function getCurrentPlayback() {
+			const res = await fetch('https://api.spotify.com/v1/me/player', {
+				headers: {
+					Authorization: `Bearer ${accessToken}`
+				}
+			});
+			if (!res.ok) {
+				console.error('Failed to fetch playback');
+				return null;
+			}
+			return await res.json();
+		}
+
+		async function pauseAtEnd() {
+			const data = await getCurrentPlayback();
+			if (!data || !data.item) return;
+
+			const duration = data.item.duration_ms;
+			const progress = data.progress_ms;
+			const timeLeft = duration - progress;
+
+			console.log(`Will pause in ${timeLeft}ms`);
+
+			setTimeout(async () => {
+				await fetch('https://api.spotify.com/v1/me/player/pause', {
+					method: 'PUT',
+					headers: {
+						Authorization: `Bearer ${accessToken}`
+					}
+				});
+				document.body.innerHTML = '<h1>Paused!</h1>';
+			}, timeLeft - 500); // try pausing just before it ends
+		}
+
+		pauseAtEnd();
+	</script>
+</body>
+</html>
